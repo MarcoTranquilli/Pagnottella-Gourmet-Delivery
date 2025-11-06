@@ -1,29 +1,20 @@
 import express from "express";
-import pkg from "pg";
-import dotenv from "dotenv";
-dotenv.config();
+import { addProduct, getAllProducts } from "./firebase.js";
 
-const { Pool } = pkg;
 const app = express();
+app.use(express.json());
 
-// Pool PostgreSQL (connessione automatica a Railway)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+// Aggiungi prodotto (esempio)
+app.post("/api/prodotti", async (req, res) => {
+  const { nome, prezzo } = req.body;
+  await addProduct(nome, prezzo);
+  res.send({ message: "Prodotto aggiunto!" });
 });
 
-app.get("/", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
-    res.json({
-      message: "🍞 Pagnottella Gourmet Delivery backend online!",
-      db_time: result.rows[0].now,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Database connection failed." });
-  }
+// Leggi prodotti
+app.get("/api/prodotti", async (req, res) => {
+  const prodotti = await getAllProducts();
+  res.send(prodotti);
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(3000, () => console.log("🚀 Server in ascolto su http://localhost:3000"));
